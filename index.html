@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123b35"><link rel="manifest" href="./manifest.webmanifest">
+<title>حاسبة المقاعد البلدية - الجزائر</title>
+<style>
+:root{--bg:#f3f6f5;--card:#fff;--ink:#172522;--muted:#60716c;--line:#dce5e1;--green:#146b55;--green2:#e7f3ee;--red:#a33a36;--amber:#8a5a12}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.55}
+header{background:linear-gradient(135deg,#123b35,#176b54);color:#fff;padding:22px 16px 26px}
+.wrap{max-width:980px;margin:auto;padding:0 14px}
+h1{font-size:1.45rem;margin:0 0 5px}header p{margin:0;color:#d8eee6;font-size:.93rem}
+main{padding:16px 0 44px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px;box-shadow:0 3px 14px #163b3010}
+h2{font-size:1.08rem;margin:0 0 12px}.sub{color:var(--muted);font-size:.88rem;margin:-5px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+label{display:block;font-size:.88rem;color:#40534d;margin-bottom:5px}
+input,select{width:100%;padding:11px 10px;border:1px solid #cbd8d2;border-radius:10px;font:inherit;background:#fff;color:var(--ink);min-width:0}
+input:focus,select:focus{outline:2px solid #8dc7b2;border-color:var(--green)}
+.listrow{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;background:#fcfdfc}
+.listhead{display:grid;grid-template-columns:1.2fr 1fr auto;gap:8px;align-items:end}
+.smallbtn,.btn{border:0;border-radius:10px;padding:10px 13px;font:inherit;cursor:pointer}
+.smallbtn{background:#edf2ef;color:#38524a}.danger{background:#fbeceb;color:var(--red)}
+.btn{background:var(--green);color:white;font-weight:700;padding:12px 16px}
+.btn.secondary{background:#e8efec;color:#25473c}.btnbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.candidates{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+.candidate{display:grid;grid-template-columns:1.2fr .7fr .6fr .7fr auto;gap:7px;align-items:end;margin:8px 0}
+.note{font-size:.84rem;color:var(--muted);background:#f5f8f6;padding:10px;border-radius:10px}
+.warn{color:var(--amber);background:#fff7e8;border:1px solid #f0dfbd;padding:11px;border-radius:10px;font-size:.88rem}
+.error{color:var(--red);background:#fff0ef;border:1px solid #f0cecb;padding:11px;border-radius:10px}
+.resulttop{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.metric{background:var(--green2);padding:12px;border-radius:12px}.metric span{display:block;color:var(--muted);font-size:.78rem}.metric strong{font-size:1.22rem}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:10px}th,td{padding:9px 7px;border-bottom:1px solid var(--line);text-align:right}th{background:#f5f8f6;color:#40534d}
+.pill{display:inline-block;border-radius:20px;padding:2px 8px;background:#edf2ef;font-size:.78rem}
+.bar{height:9px;background:#e9efec;border-radius:20px;overflow:hidden;margin-top:5px}.bar i{display:block;height:100%;background:#238467}
+.hidden{display:none!important}footer{color:var(--muted);font-size:.8rem;text-align:center;padding:12px}
+@media(max-width:620px){.grid{grid-template-columns:1fr}.listhead{grid-template-columns:1fr 1fr}.listhead .remove{grid-column:1/-1}.candidate{grid-template-columns:1fr 1fr}.candidate .remove{grid-column:1/-1}.resulttop{grid-template-columns:1fr 1fr}}
+@media print{body{background:white}.no-print,header .subhead{display:none!important}.card{box-shadow:none;break-inside:avoid}main{padding:0}.wrap{max-width:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>حاسبة المقاعد البلدية</h1><p>محاكاة توزيع مقاعد المجلس الشعبي البلدي وفق المواد 169–175 من قانون الانتخابات الجزائري</p></div></header>
+<main class="wrap">
+<section class="card">
+<h2>1) بيانات الدائرة الانتخابية</h2>
+<div class="grid">
+ <div><label for="seats">عدد المقاعد المطلوب شغلها</label><input id="seats" type="number" min="1" max="100" value="15"></div>
+ <div><label for="total">مجموع الأصوات المعبر عنها</label><input id="total" type="number" min="0" step="1" placeholder="اتركه فارغاً ليحسب من القوائم"></div>
+</div>
+<p class="note">أدخل مجموع الأصوات المعبر عنها كما ورد في محضر النتائج. إذا تركته فارغاً، تجمع الحاسبة أصوات القوائم المدخلة. يجب أن تكون الأرقام صحيحة وغير سالبة.</p>
+</section>
+
+<section class="card">
+<h2>2) القوائم الانتخابية وأصواتها</h2>
+<p class="sub">أدخل عدد الأصوات التي حصلت عليها كل قائمة. يمكن إضافة أو حذف قوائم.</p>
+<div id="lists"></div>
+<div class="btnbar no-print">
+<button class="btn secondary" id="addList">＋ إضافة قائمة</button>
+<button class="btn" id="calculate">احسب توزيع المقاعد</button>
+</div>
+</section>
+
+<section id="results" class="hidden">
+<section class="card">
+<h2>3) نتيجة التوزيع بين القوائم</h2>
+<div id="summary" class="resulttop"></div>
+<div id="method" class="note" style="margin-top:12px"></div>
+<div id="warnings"></div>
+<div style="overflow-x:auto"><table id="allocation"></table></div>
+</section>
+<section class="card">
+<h2>4) ترتيب المترشحين داخل كل قائمة (المادة 174)</h2>
+<p class="sub">هذا القسم اختياري. أدخل أصوات التفضيل وأعمار وجنس المترشحين لتحديد الفائزين وقواعد التعادل.</p>
+<div id="candidateResults"></div>
+</section>
+<section class="card">
+<h2>5) خلاصة قانونية</h2>
+<div id="legalSummary"></div>
+<div class="btnbar no-print">
+<button class="btn" onclick="window.print()">طباعة / حفظ PDF</button>
+<button class="btn secondary" id="reset">إعادة ضبط النتائج</button>
+</div>
+</section>
+</section>
+<section class="card">
+<h2>ملاحظات قانونية مهمة</h2>
+<ul>
+<li><b>المادة 169:</b> اقتراع نسبي على قائمة مفتوحة، بتصويت تفضيلي دون مزج.</li>
+<li><b>المادة 170:</b> يختار الناخب قائمة واحدة ويصوت تفضيلياً لمترشح أو أكثر من القائمة نفسها، في حدود عدد المقاعد.</li>
+<li><b>المادة 171:</b> تستبعد من توزيع المقاعد القائمة التي لم تبلغ 5% من الأصوات المعبر عنها، إذا وجدت قائمة واحدة على الأقل بلغت العتبة.</li>
+<li><b>المادة 172:</b> المعامل = الأصوات المعبر عنها بعد طرح أصوات القوائم المستبعدة ÷ عدد المقاعد.</li>
+<li><b>المادة 173:</b> المقاعد الأولية بالقسمة على المعامل، ثم المقاعد المتبقية حسب ترتيب البواقي من الأكبر إلى الأصغر. عند تساوي قائمتين على المقعد الأخير، يفصل متوسط أعمار مترشحي القائمتين.</li>
+<li><b>المادة 174:</b> توزع مقاعد كل قائمة على مترشحيها حسب عدد الأصوات التي حصل عليها كل مترشح. عند التعادل على المقعد الأخير يفوز الأصغر سناً؛ وإذا كان التعادل بين مترشح ومترشحة تفوز المترشحة.</li>
+<li><b>المادة 175:</b> إذا لم تبلغ أي قائمة 5%، تشارك جميع القوائم، ويحسب المعامل من مجموع الأصوات المعبر عنها ÷ عدد المقاعد.</li>
+</ul>
+<div class="warn">هذه أداة حساب ومراجعة وليست محضر إعلان نتائج رسمياً. يجب مطابقة المدخلات مع محاضر الفرز والنتائج الرسمية وقرارات السلطة الوطنية المستقلة للانتخابات. لا تحسم الأداة حالات التعادل التي لا يضع النص المعروض لها معياراً حسابياً واضحاً.</div>
+</section>
+<footer>تعمل محلياً على الجهاز ولا ترسل بياناتك إلى أي خادم. إصدار تجريبي 1.0</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let listSeq=0, lastData=null;
+function addList(name='',votes='',avgAge=''){
+ const id=++listSeq, div=document.createElement('div'); div.className='listrow'; div.dataset.id=id;
+ div.innerHTML=`<div class="listhead">
+ <div><label>اسم القائمة</label><input class="lname" placeholder="مثلاً: القائمة أ" value="${esc(name)}"></div>
+ <div><label>عدد الأصوات</label><input class="lvotes" type="number" min="0" step="1" placeholder="0" value="${votes}"></div>
+ <button class="smallbtn danger remove" type="button">حذف القائمة</button>
+ </div>
+ <div class="grid" style="margin-top:9px"><div><label>متوسط أعمار مترشحي القائمة (عند تعادل قائمتين فقط)</label><input class="ageavg" type="number" min="18" max="120" step="0.01" placeholder="اختياري" value="${avgAge}"></div><div style="display:flex;align-items:end"><button class="smallbtn addCandidate" type="button">＋ إضافة مترشح للقائمة</button></div></div>
+ <div class="candidates"><div class="candidateRows"></div></div>`;
+ div.querySelector('.remove').onclick=()=>div.remove();
+ div.querySelector('.addCandidate').onclick=()=>addCandidate(div);
+ $('lists').appendChild(div);
+}
+function addCandidate(list,name='',votes='',age='',sex='ذكر'){
+ const row=document.createElement('div'); row.className='candidate';
+ row.innerHTML=`<div><label>اسم المترشح</label><input class="cname" placeholder="الاسم" value="${esc(name)}"></div>
+ <div><label>أصواته التفضيلية</label><input class="cvotes" type="number" min="0" step="1" placeholder="0" value="${votes}"></div>
+ <div><label>العمر</label><input class="cage" type="number" min="18" max="120" placeholder="العمر" value="${age}"></div>
+ <div><label>الجنس</label><select class="csex"><option ${sex==='ذكر'?'selected':''}>ذكر</option><option ${sex==='أنثى'?'selected':''}>أنثى</option></select></div>
+ <button class="smallbtn danger remove" type="button">حذف</button>`;
+ row.querySelector('.remove').onclick=()=>row.remove();
+ list.querySelector('.candidateRows').appendChild(row);
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function num(v){return v===''?null:Number(v)}
+function fmt(v){return Number(v).toLocaleString('ar-DZ',{maximumFractionDigits:4});}
+function calculate(){
+ const seats=Number($('seats').value);
+ if(!Number.isInteger(seats)||seats<1){alert('أدخل عدداً صحيحاً موجباً للمقاعد.');return;}
+ const rows=[...$('lists').querySelectorAll('.listrow')];
+ if(!rows.length){alert('أضف قائمة واحدة على الأقل.');return;}
+ let lists=rows.map((el,i)=>({id:el.dataset.id,name:el.querySelector('.lname').value.trim()||`القائمة ${i+1}`,votes:num(el.querySelector('.lvotes').value),avgAge:num(el.querySelector('.ageavg').value),el}));
+ if(lists.some(x=>x.votes===null||!Number.isSafeInteger(x.votes)||x.votes<0)){alert('أدخل أصواتاً صحيحة وغير سالبة لكل قائمة.');return;}
+ const sum=lists.reduce((a,x)=>a+x.votes,0), entered=num($('total').value), total=entered===null?sum:entered;
+ if(!Number.isSafeInteger(total)||total<0){alert('مجموع الأصوات المعبر عنها يجب أن يكون عدداً صحيحاً غير سالب.');return;}
+ if(sum>total){alert('مجموع أصوات القوائم أكبر من مجموع الأصوات المعبر عنها. راجع القيم.');return;}
+ const reached=lists.filter(x=>x.votes/Math.max(total,1)>=.05);
+ const allUnder=reached.length===0;
+ const eligible=allUnder?lists:lists.filter(x=>x.votes/Math.max(total,1)>=.05);
+ const excluded=allUnder?[]:lists.filter(x=>!eligible.includes(x));
+ const effective=allUnder?total:total-excluded.reduce((a,x)=>a+x.votes,0);
+ if(effective<=0){alert('لا يمكن حساب المعامل: مجموع الأصوات المعتمد يساوي صفراً.');return;}
+ const q=effective/seats;
+ lists.forEach(x=>{x.eligible=eligible.includes(x);x.initial=x.eligible?Math.floor((x.votes+1e-10)/q):0;x.remainder=x.eligible?(x.initial>0?x.votes-x.initial*q:x.votes):0;x.extra=0;x.final=x.initial;});
+ let used=lists.reduce((a,x)=>a+x.initial,0), left=seats-used;
+ const ranked=eligible.slice().sort((a,b)=>{const diff=b.remainder-a.remainder;if(Math.abs(diff)>1e-8)return diff; if(a.avgAge!==null&&b.avgAge!==null)return a.avgAge-b.avgAge; return 0;});
+ const ties=[];
+ for(let i=0;i<ranked.length-1;i++) if(Math.abs(ranked[i].remainder-ranked[i+1].remainder)<1e-8) ties.push([ranked[i],ranked[i+1]]);
+ // At most one remainder seat per list under the largest-remainder allocation.
+ for(let i=0;i<left;i++){if(!ranked[i])break;ranked[i].extra=1;ranked[i].final++;}
+ const allocated=lists.reduce((a,x)=>a+x.final,0);
+ lastData={seats,total,sum,q,effective,allUnder,eligible,excluded,lists,ranked,left,allocated,ties};
+ render();
+}
+function render(){
+ const d=lastData; $('results').classList.remove('hidden');
+ $('summary').innerHTML=`<div class="metric"><span>المعامل الانتخابي</span><strong>${fmt(d.q)}</strong></div><div class="metric"><span>الأصوات المعتمدة</span><strong>${fmt(d.effective)}</strong></div><div class="metric"><span>المقاعد الموزعة</span><strong>${d.allocated} / ${d.seats}</strong></div>`;
+ $('method').innerHTML=d.allUnder?`لم تبلغ أي قائمة عتبة 5%؛ لذلك طُبقت المادة 175 واحتُسب المعامل على مجموع الأصوات المعبر عنها: ${fmt(d.total)} ÷ ${d.seats}.`:`بلغت قائمة واحدة على الأقل عتبة 5%؛ استُبعدت أصوات القوائم دون العتبة وفق المادة 171. الأصوات المعتمدة: ${fmt(d.total)} − ${fmt(d.total-d.effective)} = ${fmt(d.effective)}. المعامل: ${fmt(d.effective)} ÷ ${d.seats} = ${fmt(d.q)}.`;
+ let warnings=[];
+ if(d.sum!==d.total) warnings.push(`تنبيه: مجموع أصوات القوائم (${fmt(d.sum)}) لا يساوي مجموع الأصوات المعبر عنها المدخل (${fmt(d.total)}). تأكد من تفسير الفرق وفق محضر الفرز.`);
+ if(d.allocated!==d.seats) warnings.push(`تنبيه حسابي: تم توزيع ${d.allocated} مقعداً من أصل ${d.seats}. راجع القيم أو راجع قواعد الحالة مع الجهة الانتخابية.`);
+ if(d.ties.length) warnings.push('يوجد تعادل في البواقي بين قائمتين أو أكثر. عند تأثيره في المقعد الأخير، يُقدّم متوسط الأعمار الأصغر وفق المادة 173. أدخل متوسط الأعمار بدقة؛ وإذا تعذر الفصل حسابياً فراجع الجهة الانتخابية.');
+ $('warnings').innerHTML=warnings.map(w=>`<p class="warn">${esc(w)}</p>`).join('');
+ let html='<thead><tr><th>القائمة</th><th>الأصوات</th><th>النسبة</th><th>الأهلية</th><th>مقاعد أولية</th><th>الباقي</th><th>مقعد الباقي</th><th>المجموع</th></tr></thead><tbody>';
+ d.lists.forEach(x=>{let pct=d.total?100*x.votes/d.total:0;html+=`<tr><td><b>${esc(x.name)}</b></td><td>${fmt(x.votes)}</td><td>${fmt(pct)}%</td><td>${x.eligible?'<span class="pill">مؤهلة</span>':'<span class="pill">مستبعدة</span>'}</td><td>${x.initial}</td><td>${x.eligible?fmt(x.remainder):'—'}</td><td>${x.extra?'نعم':'—'}</td><td><b>${x.final}</b></td></tr>`;});
+ html+='</tbody>'; $('allocation').innerHTML=html;
+ $('legalSummary').innerHTML=`<p>عدد المقاعد: <b>${d.seats}</b> — عدد القوائم: <b>${d.lists.length}</b> — القوائم المؤهلة: <b>${d.eligible.length}</b> — القوائم المستبعدة: <b>${d.excluded.length}</b>.</p><p>قاعدة الحساب: المواد 171 و172 و173، أو المادة 175 إذا لم تبلغ أي قائمة 5%.</p><p>توزيع المقاعد داخل القائمة وفق المادة 174 مستقل عن توزيع المقاعد بين القوائم.</p>`;
+ renderCandidates();
+ $('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderCandidates(){
+ const d=lastData, root=$('candidateResults'); root.innerHTML='';
+ d.lists.filter(x=>x.final>0).forEach(x=>{
+  const card=document.createElement('div');card.className='listrow';
+  const candidateRows=[...x.el.querySelectorAll('.candidate')].map(r=>({name:r.querySelector('.cname').value.trim()||'مترشح دون اسم',votes:Number(r.querySelector('.cvotes').value||0),age:num(r.querySelector('.cage').value),sex:r.querySelector('.csex').value}));
+  let body=`<h3 style="font-size:1rem;margin:0 0 6px">${esc(x.name)} — ${x.final} مقعد</h3>`;
+  if(!candidateRows.length){body+='<p class="note">لم تُدخل بيانات المترشحين. أدخلها في قسم القوائم ثم أعد الحساب لعرض الفائزين.</p>';}
+  else{
+   const valid=candidateRows.every(c=>Number.isSafeInteger(c.votes)&&c.votes>=0);
+   if(!valid){body+='<p class="warn">توجد قيم غير صحيحة لأصوات المترشحين.</p>';}
+   else{
+    candidateRows.sort((a,b)=>{const v=b.votes-a.votes;if(v!==0)return v;if(a.sex!==b.sex)return a.sex==='أنثى'?-1:1;return (a.age??999)-(b.age??999);});
+    const winners=candidateRows.slice(0,x.final);
+    body+='<table><thead><tr><th>الترتيب</th><th>المترشح</th><th>الأصوات التفضيلية</th><th>العمر</th><th>النتيجة</th></tr></thead><tbody>';
+    candidateRows.forEach((c,i)=>body+=`<tr><td>${i+1}</td><td>${esc(c.name)}</td><td>${fmt(c.votes)}</td><td>${c.age??'—'}</td><td>${i<x.final?'<b>فائز</b>':'غير فائز'}</td></tr>`);
+    body+='</tbody></table>';
+    const tieBoundary=candidateRows.length>x.final && candidateRows[x.final-1].votes===candidateRows[x.final].votes;
+    if(tieBoundary)body+='<p class="warn">يوجد تعادل عند آخر مقعد. طبقت الأداة الأصغر سناً ثم أولوية المترشحة عند تعادل رجل وامرأة، وفق المادة 174. إذا بقي التعادل بعد ذلك، يلزم الرجوع للجهة المختصة.</p>';
+    if(candidateRows.length<x.final)body+='<p class="warn">عدد المترشحين المدخلين أقل من المقاعد المخصصة للقائمة.</p>';
+   }
+  }
+  card.innerHTML=body;root.appendChild(card);
+ });
+ if(!root.children.length)root.innerHTML='<p class="note">لا توجد قوائم حصلت على مقاعد.</p>';
+}
+$('addList').onclick=()=>addList();
+$('calculate').onclick=calculate;
+$('reset').onclick=()=>{$('results').classList.add('hidden');lastData=null;};
+addList('القائمة أ','4600','');
+addList('القائمة ب','3200','');
+addList('القائمة ج','1700','');
+addList('القائمة د','500','');
+</script>
+<script>if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}</script></body></html>
